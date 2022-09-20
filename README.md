@@ -10,14 +10,14 @@
 ### 浏览器插件(推荐)
 
 1. [Tampermonkey](https://www.tampermonkey.net/)
-2. [添加脚本](https://cdn.jsdelivr.net/gh/RyoLee/emby-danmaku@gh-pages/ede.user.js)
+2. [添加脚本](https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@gh-pages/ede.user.js)
 
 ### 修改服务端
 
 修改文件 /system/dashboard-ui/index.html (Docker版,其他类似),在`</body>`前添加如下标签
 
 ```
-<script src="https://cdn.jsdelivr.net/gh/RyoLee/emby-danmaku@gh-pages/ede.user.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@gh-pages/ede.user.js" defer></script>
 ```
 该方式安装与浏览器插件安装**可同时使用不冲突**
 
@@ -51,7 +51,6 @@
 
 1. 译名导致的异常: 如『よふかしのうた』 Emby 识别为《彻夜之歌》后因为弹弹 play 中为《夜曲》导致无法匹配
 2. 存在多季/剧场版/OVA 等导致的异常: 如『OVERLORD』第四季若使用S[N]格式归档(如OVERLORD/S4E1.mkv或OVERLORD/S4/E1.mkv),可能出现匹配失败/错误等现象
-3. 其他加载BUG: ~~鉴定为后端程序猿不会前端还要硬写JS~~,有BUG麻烦 [开个issue](https://github.com/RyoLee/emby-danmaku/issues/new/choose) THX
 
 **首次播放时请检查当前弹幕信息是否正确匹配,若匹配错误请尝试手动匹配**
 

@@ -1,14 +1,11 @@
 // ==UserScript==
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
-// @namespace    https://github.com/RyoLee
 // @author       RyoLee
-// @version      1.9
+// @version      1.9.1
 // @copyright    2022, RyoLee (https://github.com/RyoLee)
 // @license      MIT; https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
-// @updateURL    https://cdn.jsdelivr.net/gh/RyoLee/emby-danmaku@gh-pages/ede.user.js
-// @downloadURL  https://cdn.jsdelivr.net/gh/RyoLee/emby-danmaku@gh-pages/ede.user.js
 // @grant        none
 // @match        */web/index.html
 // ==/UserScript==
@@ -25,6 +22,7 @@
         const translate_icon = '\uE927';
         const info_icon = '\uE0E0';
         const filter_icons = ['\uE3E0', '\uE3D0', '\uE3D1', '\uE3D2'];
+        const transparency_icons = [ '\uEBDC' , '\uEBD9', '\uEBE0', '\uEBDD', '\uEBE2', '\uEBD4' , '\uEBD2', '\uE1A4' ];
         const buttonOptions = {
             class: 'paper-icon-button-light',
             is: 'paper-icon-button-light',
@@ -110,6 +108,20 @@
                 document.querySelector('#filteringDanmaku').children[0].innerText = filter_icons[level];
             },
         };
+
+        const transparencyButtonOpts = {
+            title: '弹幕密度(下次加载生效)',
+            id: 'transparencyDanmaku',
+            innerText: null,
+            onclick: () => {
+                console.log('切换弹幕密度');
+                let level = window.localStorage.getItem('danmakuTransparencyLevel');
+                level = ((level ? parseInt(level) : 0) + 1) % 8;
+                window.localStorage.setItem('danmakuTransparencyLevel', level);
+                document.querySelector('#transparencyDanmaku').children[0].innerText = transparency_icons[level];
+            },
+        };
+
         // ------ configs end------
         /* eslint-disable */
         /* https://cdn.jsdelivr.net/npm/danmaku/dist/danmaku.canvas.min.js */
@@ -193,6 +205,9 @@
             // 屏蔽等级
             filterButtonOpts.innerText = filter_icons[parseInt(window.localStorage.getItem('danmakuFilterLevel') ? window.localStorage.getItem('danmakuFilterLevel') : 0)];
             menubar.appendChild(createButton(filterButtonOpts));
+            // 弹幕密度
+            transparencyButtonOpts.innerText = transparency_icons[parseInt(window.localStorage.getItem('danmakuTransparencyLevel') ? window.localStorage.getItem('danmakuTransparencyLevel') : 0)];
+            menubar.appendChild(createButton(transparencyButtonOpts));
             // 弹幕信息
             menubar.appendChild(createButton(infoButtonOpts));
             console.log('UI初始化完成');
@@ -448,6 +463,8 @@
 
         function danmakuParser($obj) {
             //const $xml = new DOMParser().parseFromString(string, 'text/xml')
+            let level = 7;
+            level = parseInt(window.localStorage.getItem('danmakuTransparencyLevel') ? window.localStorage.getItem('danmakuTransparencyLevel') : 0);
             return $obj
                 .map(($comment) => {
                     const p = $comment.p;
@@ -458,6 +475,11 @@
                     //const fontSize = Number(values[2]) || 25
                     const fontSize = 25;
                     const color = `000000${Number(values[2]).toString(16)}`.slice(-6);
+                    var rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+                    var r = parseInt(rgb[1], 16);
+                    var g = parseInt(rgb[2], 16);
+                    var b = parseInt(rgb[3], 16);
+                    var a = 0.3 + level * 0.1;
                     return {
                         text: $comment.m,
                         mode,
@@ -465,12 +487,12 @@
                         style: {
                             fontSize: `${fontSize}px`,
                             color: `#${color}`,
-                            textShadow:
-                                color === '00000' ? '-1px -1px #fff, -1px 1px #fff, 1px -1px #fff, 1px 1px #fff' : '-1px -1px #000, -1px 1px #000, 1px -1px #000, 1px 1px #000',
+                            //textShadow:
+                                //color === '000000' ? '-1px -1px #fff, -1px 1px #fff, 1px -1px #fff, 1px 1px #fff' : '-1px -1px #000, -1px 1px #000, 1px -1px #000, 1px 1px #000',
 
                             font: `${fontSize}px sans-serif`,
-                            fillStyle: `#${color}`,
-                            strokeStyle: color === '000000' ? '#fff' : '#000',
+                            fillStyle: `rgba(${r},${g},${b},${a})`,// `#${color}`,
+                            strokeStyle: color === '000000' ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`, //'#fff'
                             lineWidth: 2.0,
                         },
                     };

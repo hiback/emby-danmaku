@@ -10,14 +10,14 @@
 ### 浏览器插件(推荐)
 
 1. [Tampermonkey](https://www.tampermonkey.net/)
-2. [添加脚本](https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@gh-pages/ede.user.js)
+2. [添加脚本](https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@master/ede.js)
 
 ### 修改服务端
 
 修改文件 /system/dashboard-ui/index.html (Docker版,其他类似),在`</body>`前添加如下标签
 
 ```
-<script src="https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@gh-pages/ede.user.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@master/ede.js" defer></script>
 ```
 该方式安装与浏览器插件安装**可同时使用不冲突**
 

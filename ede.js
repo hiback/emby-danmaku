@@ -205,7 +205,7 @@
             // 屏蔽等级
             filterButtonOpts.innerText = filter_icons[parseInt(window.localStorage.getItem('danmakuFilterLevel') ? window.localStorage.getItem('danmakuFilterLevel') : 0)];
             menubar.appendChild(createButton(filterButtonOpts));
-            // 弹幕密度
+            // 弹幕透明度
             transparencyButtonOpts.innerText = transparency_icons[parseInt(window.localStorage.getItem('danmakuTransparencyLevel') ? window.localStorage.getItem('danmakuTransparencyLevel') : 0)];
             menubar.appendChild(createButton(transparencyButtonOpts));
             // 弹幕信息

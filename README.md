@@ -10,7 +10,7 @@
 ### 浏览器插件(推荐)
 
 1. [Tampermonkey](https://www.tampermonkey.net/)
-2. [添加脚本](https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@master/ede.js)
+2. [添加脚本](https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@develop/ede.js)
 
 ### 修改服务端
 

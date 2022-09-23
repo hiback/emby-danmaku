@@ -16,6 +16,8 @@
         // ------ configs start------
         const check_interval = 200;
         const chConverTtitle = ['当前状态: 未启用', '当前状态: 转换为简体', '当前状态: 转换为繁体'];
+
+        //图标常量
         // 0:当前状态关闭 1:当前状态打开
         const danmaku_icons = [ '\uE7A2', '\uE0B9' ];
         const search_icon = '\uE881';
@@ -23,16 +25,41 @@
         const info_icon = '\uE0E0';
         const filter_icons = ['\uE3E0', '\uE3D0', '\uE3D1', '\uE3D2'];
         const transparency_icons = [ '\uEBDC' , '\uEBD9', '\uEBE0', '\uEBDD', '\uEBE2', '\uEBD4' , '\uEBD2', '\uE1A4' ];
+
+        //通用参数常量
+        const menubarOptions = {
+            class: 'flex flex-direction-row',
+        };
         const buttonOptions = {
             class: 'paper-icon-button-light',
             is: 'paper-icon-button-light',
         };
+        const rangeSliderOptions = {
+            class: 'emby-slider emby-slider-backdropfilter',
+            is: 'emby-slider',
+        };
+        const sliderContainerOptions = {
+            class: 'slidercontainer flex-grow emby-slider-container',
+        };
+        const sliderWrapperOptions = {
+            class: 'videoOsdVolumeSliderWrapper flex-grow',
+        };
+        const sliderdivOptions = {
+            class: 'videoOsdVolumeControls-showhover',
+            style: 'position:relative;',
+        };
+
+        //定位标志常量
         const uiQueryStr = '.videoOsd-centerButtons';
         const mediaContainerQueryStr = "div[data-type='video-osd']";
         const mediaQueryStr = 'video';
+
+        //全局透明度
         var globalOpacity = 1.0;
+
+        //各个控件差异化参数常量
         const displayButtonOpts = {
-            title: '弹幕开关',
+            title: '弹幕开关/透明度调整',
             id: 'displayDanmaku',
             innerText: null,
             onclick: () => {
@@ -96,7 +123,6 @@
                 sendNotification('当前弹幕匹配', msg);
             },
         };
-
         const filterButtonOpts = {
             title: '过滤等级(下次加载生效)',
             id: 'filteringDanmaku',
@@ -109,17 +135,15 @@
                 document.querySelector('#filteringDanmaku').children[0].innerText = filter_icons[level];
             },
         };
-
-        const transparencyButtonOpts = {
-            title: '弹幕密度30-100%(下次加载生效)',
-            id: 'transparencyDanmaku',
-            innerText: null,
-            onclick: () => {
-                console.log('切换弹幕密度');
-                let level = window.localStorage.getItem('danmakuTransparencyLevel');
-                level = ((level ? parseInt(level) : 0) + 1) % 8;
-                window.localStorage.setItem('danmakuTransparencyLevel', level);
-                document.querySelector('#transparencyDanmaku').children[0].innerText = transparency_icons[level];
+        const transparencyRangeSliderOpts = {
+            type: 'range',
+            step: '1',
+            min: '0',
+            max: '100',
+            value: '100',
+            oninput: function(){
+                window.localStorage.setItem('danmakuTransparencyLevel', this.value);
+                globalOpacity = this.value / 100;
             },
         };
 
@@ -147,6 +171,29 @@
                 this.ob = null;
                 this.loading = false;
             }
+        }
+
+        function createRangeSlider(opt, button) {
+            let level = window.localStorage.getItem('danmakuTransparencyLevel');
+            let input = document.createElement('input', rangeSliderOptions);
+            input.setAttribute('type', opt.type);
+            input.setAttribute('step', opt.step);
+            input.setAttribute('min', opt.min);
+            input.setAttribute('max', opt.max);
+            input.setAttribute('value', level ? level : opt.value);
+            input.oninput = opt.oninput;
+            let sliderContainer = document.createElement('div');
+            sliderContainer.className = sliderContainerOptions.class;
+            sliderContainer.appendChild(input);
+            let SliderWrapper = document.createElement('div');
+            SliderWrapper.className = sliderWrapperOptions.class;
+            SliderWrapper.appendChild(sliderContainer);
+            let sliderdiv = document.createElement('div');
+            sliderdiv.className = sliderdivOptions.class;
+            sliderdiv.style = sliderdivOptions.style;
+            sliderdiv.appendChild(button);
+            sliderdiv.appendChild(SliderWrapper);
+            return sliderdiv;
         }
 
         function createButton(opt) {
@@ -192,13 +239,15 @@
             let parent = document.querySelector(uiQueryStr).parentNode;
             let menubar = document.createElement('div');
             menubar.id = 'danmakuCtr';
+            menubar.className = menubarOptions.class;
             if (!window.ede.episode_info) {
                 menubar.style.opacity = 0.5;
             }
             parent.append(menubar);
             // 弹幕开关
             displayButtonOpts.innerText = danmaku_icons[window.ede.danmakuSwitch];
-            menubar.appendChild(createButton(displayButtonOpts));
+            menubar.appendChild(createRangeSlider(transparencyRangeSliderOpts,createButton(displayButtonOpts)))
+            //menubar.appendChild(createButton(displayButtonOpts));
             // 手动匹配
             menubar.appendChild(createButton(searchButtonOpts));
             // 简繁转换
@@ -207,9 +256,6 @@
             // 屏蔽等级
             filterButtonOpts.innerText = filter_icons[parseInt(window.localStorage.getItem('danmakuFilterLevel') ? window.localStorage.getItem('danmakuFilterLevel') : 0)];
             menubar.appendChild(createButton(filterButtonOpts));
-            // 弹幕透明度
-            transparencyButtonOpts.innerText = transparency_icons[parseInt(window.localStorage.getItem('danmakuTransparencyLevel') ? window.localStorage.getItem('danmakuTransparencyLevel') : 0)];
-            menubar.appendChild(createButton(transparencyButtonOpts));
             // 弹幕信息
             menubar.appendChild(createButton(infoButtonOpts));
             console.log('UI初始化完成');
@@ -360,8 +406,8 @@
             }
             let _comments = danmakuFilter(danmakuParser(comments));
             //计算透明度
-            let level = parseInt(window.localStorage.getItem('danmakuTransparencyLevel') ? window.localStorage.getItem('danmakuTransparencyLevel') : 0);
-            globalOpacity = 0.3 + 0.1 * level;
+            let level = parseInt(window.localStorage.getItem('danmakuTransparencyLevel') ? window.localStorage.getItem('danmakuTransparencyLevel') : 100);
+            globalOpacity = level / 100;
             console.log('弹幕加载成功: ' + _comments.length);
 
             while (!document.querySelector(mediaContainerQueryStr)) {

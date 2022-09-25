@@ -54,8 +54,21 @@
         const mediaContainerQueryStr = "div[data-type='video-osd']";
         const mediaQueryStr = 'video';
 
-        //全局透明度
+        //全局透明度/字体大小
         var globalOpacity = 1.0;
+        var fontSizeGlobal = 25;
+        //字体大小（桌面/移动）
+        const fontSizeDesktop = 25;
+        const fontSizeMobile = 15;
+        //字体设置
+        if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+            // 当前设备是移动设备
+            fontSizeGlobal = fontSizeMobile;
+            console.log('检测为移动设备');
+        }else{
+            fontSizeGlobal = fontSizeDesktop;
+            console.log('检测为桌面设备');
+        }
 
         //各个控件差异化参数常量
         const displayButtonOpts = {
@@ -522,7 +535,7 @@
                     const mode = { 6: 'ltr', 1: 'rtl', 5: 'top', 4: 'bottom' }[values[1]];
                     if (!mode) return null;
                     //const fontSize = Number(values[2]) || 25
-                    const fontSize = 25;
+                    const fontSize = fontSizeGlobal;
                     const color = `000000${Number(values[2]).toString(16)}`.slice(-6);
                     return {
                         text: $comment.m,

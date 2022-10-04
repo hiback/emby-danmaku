@@ -50,7 +50,7 @@
         };
 
         //定位标志常量
-        const uiQueryStr = '.videoOsd-centerButtons';
+        const uiQueryStr = '.videoOsd-maintransportbuttons';
         const mediaContainerQueryStr = "div[data-type='video-osd']";
         const mediaQueryStr = 'video';
 

@@ -392,7 +392,7 @@
         }
 
         function getComments(episodeId) {
-            let url = 'https://api.xn--7ovq92diups1e.com/cors/https://api.dandanplay.net/api/v2/comment/' + episodeId + '?withRelated=true&chConvert=' + window.ede.chConvert;
+            let url = 'https://api.9-ch.com/cors/https://api.dandanplay.net/api/v2/comment/' + episodeId + '?withRelated=true&chConvert=' + window.ede.chConvert;
             return fetch(url)
                 .then((response) => response.json())
                 .then((data) => {

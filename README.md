@@ -7,11 +7,6 @@
 
 任选以下一种方式安装即可
 
-### 浏览器插件(推荐)
-
-1. [Tampermonkey](https://www.tampermonkey.net/)
-2. [添加脚本](https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@develop/ede.js)
-
 ### 修改服务端
 
 修改文件 /system/dashboard-ui/index.html (Docker版,其他类似),在`</body>`前添加如下标签

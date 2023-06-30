@@ -3,6 +3,8 @@
 ## Emby danmaku extension
 ![截图](https://raw.githubusercontent.com/RyoLee/emby-danmaku/res/S0.png)
 
+## （相比原版添加了弹幕透明度调整）
+
 ## 安装
 
 任选以下一种方式安装即可

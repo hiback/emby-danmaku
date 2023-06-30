@@ -1,7 +1,7 @@
 # emby-danmaku
 
 ## Emby danmaku extension
-![截图](https://raw.githubusercontent.com/RyoLee/emby-danmaku/res/S0.png)
+![截图](https://raw.githubusercontent.com/hiback/emby-danmaku/res/S01.jpg)
 
 ## （相比原版添加了弹幕透明度调整）
 

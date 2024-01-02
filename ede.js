@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       RyoLee
-// @version      1.9.2
+// @version      1.9.2.1
 // @copyright    2022, RyoLee (https://github.com/RyoLee)
 // @license      MIT; https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -376,7 +376,7 @@
             animeName = prompt('确认动画名:', animeName);
         }
 
-        let searchUrl = 'https://api.dandanplay.net/api/v2/search/episodes?anime=' + animeName + '&withRelated=true';
+        let searchUrl = 'https://api.9-ch.com/cors/https://api.dandanplay.net/api/v2/search/episodes?anime=' + animeName + '&withRelated=true';
         if (is_auto) {
             searchUrl += '&episode=' + episode;
         }

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
-// @author       RyoLee
-// @version      1.9.2.1
+// @author       RyoLee -Modded by hiback
+// @version      2.0.0
 // @copyright    2022, RyoLee (https://github.com/RyoLee)
 // @license      MIT; https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -44,13 +44,13 @@
         class: 'videoOsdVolumeSliderWrapper flex-grow',
     };
     const sliderdivOptions = {
-        class: 'videoOsdVolumeControls-showhover',
+        class: 'videoOsdVolumeControls flex flex-direction-row align-items-center',
         style: 'position:relative;',
     };
 
     //定位标志常量
     const uiAnchorStr = '\uE034';
-    const mediaContainerQueryStr = "div[data-type='video-osd']";
+    const mediaContainerQueryStr = 'div[class~="view-videoosd-videoosd"]';
     const mediaQueryStr = 'video';
 
     //全局透明度/移动端检测flag
@@ -228,6 +228,7 @@
             console.log('正在初始化Listener');
             container.setAttribute('ede_listening', true);
             container.addEventListener('play', reloadDanmaku);
+            reloadDanmaku();
             console.log('Listener初始化完成');
         }
     }
@@ -266,13 +267,33 @@
         if (!uiAnchor || !uiAnchor[0]) {
             return;
         }
-        // 已初始化
-        if (document.getElementById('danmakuCtr')) {
+        // 不在播放页面
+        let NotHideFlag = 0;
+        let TargetIndex = null;
+        for (let index = 0; index < uiAnchor.length; index++) {
+            if (uiAnchor[index].parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.classList.contains('hide')) {
+                continue;
+            }
+            else {
+                NotHideFlag = 1;
+                TargetIndex = index;
+            }
+        }
+        if (!NotHideFlag) {
             return;
         }
+        // 已初始化
+        if(document.getElementById('danmakuCtr') && !document.getElementById('danmakuCtr').parentNode.parentNode.parentNode.parentNode.parentNode.classList.contains('hide')) {
+            return;
+        }
+        // 开始初始化
         console.log('正在初始化UI');
+        // 删除旧控件
+        if (document.getElementById('danmakuCtr')) {
+            document.getElementById('danmakuCtr').remove()
+        }
         // 弹幕按钮容器div
-        let parent = uiAnchor[0].parentNode.parentNode.parentNode;
+        let parent = uiAnchor[TargetIndex].parentNode.parentNode.parentNode;
         let menubar = document.createElement('div');
         menubar.id = 'danmakuCtr';
         menubar.className = menubarOptions.class;
@@ -448,11 +469,31 @@
         globalOpacity = level / 100;
         console.log('弹幕加载成功: ' + _comments.length);
 
-        while (!document.querySelector(mediaContainerQueryStr)) {
-            await new Promise((resolve) => setTimeout(resolve, 200));
+        let found_flag = 0;
+        let _container = null;
+        do {
+            let _container_list = document.querySelectorAll(mediaContainerQueryStr);
+            if (_container_list) {
+                for (let index = 0; index < _container_list.length; index++) {
+                    if (document.querySelectorAll(mediaContainerQueryStr)[index].classList.contains('hide')) {
+                        continue;
+                    }
+                    else {
+                        _container = document.querySelectorAll(mediaContainerQueryStr)[index];
+                        found_flag = 1;
+                        break;
+                    }
+                }
+                if (!found_flag) {
+                    await new Promise((resolve) => setTimeout(resolve, 200));
+                }
+            }
+            else {
+                await new Promise((resolve) => setTimeout(resolve, 200));
+            }
         }
-
-        let _container = document.querySelector(mediaContainerQueryStr);
+        while (!found_flag)
+        
         let _media = document.querySelector(mediaQueryStr);
         window.ede.danmaku = new Danmaku({
             container: _container,

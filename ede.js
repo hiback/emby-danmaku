@@ -475,11 +475,11 @@
             let _container_list = document.querySelectorAll(mediaContainerQueryStr);
             if (_container_list) {
                 for (let index = 0; index < _container_list.length; index++) {
-                    if (document.querySelectorAll(mediaContainerQueryStr)[index].classList.contains('hide')) {
+                    if (_container_list[index].classList.contains('hide')) {
                         continue;
                     }
                     else {
-                        _container = document.querySelectorAll(mediaContainerQueryStr)[index];
+                        _container = _container_list[index];
                         found_flag = 1;
                         break;
                     }

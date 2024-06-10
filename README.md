@@ -5,6 +5,9 @@
 
 ## （相比原版添加了弹幕透明度调整）
 
+## 自用脚本，更新可能不及时，请安装兼容的Emby版本：
+当前测试可兼容版本： Emby Server 4.8.8.0
+
 ## 安装
 
 任选以下一种方式安装即可
@@ -50,7 +53,3 @@
 2. 存在多季/剧场版/OVA 等导致的异常: 如『OVERLORD』第四季若使用S[N]格式归档(如OVERLORD/S4E1.mkv或OVERLORD/S4/E1.mkv),可能出现匹配失败/错误等现象
 
 **首次播放时请检查当前弹幕信息是否正确匹配,若匹配错误请尝试手动匹配**
-
-## Star History
-
-![Star History Chart](https://api.star-history.com/svg?repos=RyoLee/emby-danmaku&type=Timeline)

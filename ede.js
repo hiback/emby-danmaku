@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       RyoLee -Modded by hiback
-// @version      2.0.1
+// @version      2.0.2
 // @copyright    2022, RyoLee (https://github.com/RyoLee)
 // @license      MIT; https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -34,7 +34,7 @@
         is: 'paper-icon-button-light',
     };
     const rangeSliderOptions = {
-        class: 'emby-slider emby-slider-backdropfilter',
+        class: 'emby-slider emby-slider-scalebg emby-slider-nothumb',
         is: 'emby-slider',
     };
     const sliderContainerOptions = {
@@ -181,13 +181,12 @@
     }
 
     function createRangeSlider(opt, button) {
-        let level = window.localStorage.getItem('danmakuTransparencyLevel');
         let input = document.createElement('input', rangeSliderOptions);
         input.setAttribute('type', opt.type);
         input.setAttribute('step', opt.step);
         input.setAttribute('min', opt.min);
         input.setAttribute('max', opt.max);
-        input.setAttribute('value', level ? level : opt.value);
+        input.setAttribute('value', opt.value);
         input.oninput = opt.oninput;
         let sliderContainer = document.createElement('div');
         sliderContainer.className = sliderContainerOptions.class;
@@ -301,9 +300,15 @@
             menubar.style.opacity = 0.5;
         }
         parent.append(menubar);
-        // 弹幕开关
+        // 弹幕开关/透明度
         displayButtonOpts.innerText = danmaku_icons[window.ede.danmakuSwitch];
-        menubar.appendChild(createRangeSlider(transparencyRangeSliderOpts,createButton(displayButtonOpts)))
+        menubar.appendChild(createRangeSlider(transparencyRangeSliderOpts,createButton(displayButtonOpts)));
+        // 设置透明度滑块位置
+        let level = window.localStorage.getItem('danmakuTransparencyLevel');
+        menubar.querySelector('.emby-slider-background-lower').setAttribute('style','width: ' + level + '%;');
+        menubar.querySelector('.emby-slider-thumb').classList.remove('emby-slider-thumb-mini');
+        menubar.querySelector('.emby-slider-thumb').classList.add('emby-slider-thumb-hoveronly');
+        menubar.querySelector('.emby-slider-thumb').setAttribute('style','inset-inline-start: ' + level + '%;');
         //menubar.appendChild(createButton(displayButtonOpts));
         // 手动匹配
         menubar.appendChild(createButton(searchButtonOpts));

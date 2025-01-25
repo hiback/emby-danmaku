@@ -2,17 +2,18 @@
 
 ## Emby danmaku extension
 
-[![1737812914239](images/README/1737812914239.png)](https://github.com/kutongling/emby-danmaku/blob/develop/%E6%BC%94%E7%A4%BA.png)](https://github.com/kutongling/emby-danmaku/blob/develop/%E6%BC%94%E7%A4%BA.png)
+![1737812914239](images/README/1737812914239.png)
 
 ## 版本变化
 
-### 1.0.1
+### 1.0.11
 
--添加高级过滤按钮，可按需过滤滚动弹幕和顶/底部等弹幕
-  - 以上修改基于 [dd-danmaku](https://github.com/chen3861229/dd-danmaku)
--添加弹幕信息关闭按钮，删除原有弹幕信息按键
--弹幕信息添加原有弹幕数量与加载弹幕数量
--修改弹幕加载时机逻辑，避免某些浏览器（edge）会在播放时没有加载弹幕
+- 过滤等级会立即生效
+- 添加高级过滤按钮，可按需过滤滚动弹幕和顶/底部等弹幕
+  - 此修改基于 [dd-danmaku](https://github.com/chen3861229/dd-danmaku)
+- 添加弹幕信息关闭按钮，删除原有弹幕信息按键
+- 弹幕信息添加原有弹幕数量与加载弹幕数量
+- 修改弹幕加载时机逻辑，避免某些浏览器（edge）会在播放时没有加载弹幕
 
 ### 1.0
 

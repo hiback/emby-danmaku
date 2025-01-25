@@ -775,7 +775,7 @@
           <button is="emby-button" id="danmakuSearchBtn" class="paper-icon-button-light" title="搜索" style="color: #fff;">
             <span class="md-icon">${search_icon}</span>
           </button>
-          <button is="emby-button" id="danmakuToggleTitle" class="paper-icon-button-light" title="切换原标题" style="color: #fff;">
+          <button is="emby-button" id="danmakuToggleTitle" class="paper-icon-button-light" title="使用日语标题搜索" style="color: #fff;">
             <span class="md-icon">${translate_icon}</span>
           </button>
         </div>

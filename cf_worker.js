@@ -39,12 +39,13 @@ async function handleGetRequest(request, env) {
   if (!hostlist.includes(tUrlObj.hostname)) {
     return Forbidden(tUrlObj);
   }
-  const new_headers = new Headers(request.headers)
-  new_headers.set('X-Auth', '1')
-  new_headers.set('X-AppId', env.APPID)
-  new_headers.set('X-AppSecret', env.APPSECRET)
   let response = await fetch(url, {
-    headers: new_headers,
+    headers: new Headers({
+      ...request.headers,
+      'X-Auth': '1',
+      'X-AppId': env.APPID,
+      'X-AppSecret': env.APPSECRET,
+    }),
     body: request.body,
     method: request.method,
   });

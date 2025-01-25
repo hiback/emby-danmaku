@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件 (基于RyoLee的emby-danmaku和chen3861229的dd-danmaku项目修改)
 // @author       RyoLee - Modified by hiback (Forked and modified by kutongling)
-// @version      1.0.1
+// @version      1.0.11
 // @copyright    2022, RyoLee (https://github.com/RyoLee), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -22,7 +22,7 @@
   const search_icon = '\uE881';
   const translate_icon = '\uE927';
   const filter_icons = ['\uE3E0', '\uE3D0', '\uE3D1', '\uE3D2'];
-  const transparency_icons = ['\uEBDC', '\uEBD9', '\uEBE0', '\uEBDD', '\uEBE2', '\uEBD4', '\uEBD2', '\uE1A4'];
+  const transparency_icons = ['\uEBDC', '\uEBD9', '\uEBE0', '\uEBE2', '\uEBE2', '\uEBD4', '\uEBD2', '\uE1A4'];
   const info_switch_icons = ['\uE8F5', '\uE8F4']; // 关闭/显示
   const more_filter_icon = '\uE5D3'; // 更多过滤图标
 
@@ -115,7 +115,7 @@
     },
   };
   const filterButtonOpts = {
-    title: '过滤等级(下次加载生效)',
+    title: '过滤等级(立即生效)', 
     id: 'filteringDanmaku',
     innerText: null,
     onclick: () => {
@@ -124,6 +124,8 @@
       level = ((level ? parseInt(level) : 0) + 1) % 4;
       window.localStorage.setItem('danmakuFilterLevel', level);
       document.querySelector('#filteringDanmaku').children[0].innerText = filter_icons[level];
+      // 添加立即重载弹幕
+      reloadDanmaku('reload');
     },
   };
   const transparencyRangeSliderOpts = {

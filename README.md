@@ -13,23 +13,19 @@
   - 以上修改基于 [dd-danmaku](https://github.com/chen3861229/dd-danmaku)
 - 修复手动填充时无法自动填充标题和集数的问题
 
-
 ## 引用项目
 
 此项目基于以下代码库：
 
-- **Forked from hiback/emby-danmaku**  
-  Repository: [https://github.com/hiback/emby-danmaku](https://github.com/hiback/emby-danmaku)  
+- **Forked from hiback/emby-danmaku**
+  Repository: [https://github.com/hiback/emby-danmaku](https://github.com/hiback/emby-danmaku)
   License: MIT License
-
-- **原项目 dd-danmaku** by 9channel  
-  Repository: [https://github.com/9channel/dd-danmaku](https://github.com/9channel/dd-danmaku)  
+- **原项目 dd-danmaku** by 9channel
+  Repository: [https://github.com/9channel/dd-danmaku](https://github.com/9channel/dd-danmaku)
   License: MIT License
-
-- **使用代码来自 dd-danmaku** by chen3861229  
-  Repository: [https://github.com/chen3861229/dd-danmaku](https://github.com/chen3861229/dd-danmaku)  
+- **使用代码来自 dd-danmaku** by chen3861229
+  Repository: [https://github.com/chen3861229/dd-danmaku](https://github.com/chen3861229/dd-danmaku)
   License: MIT License
-
 
 ## 安装
 

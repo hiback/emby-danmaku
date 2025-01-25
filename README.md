@@ -1,20 +1,35 @@
 # emby-danmaku
-## Third-Party Libraries and Code
 
-This project includes code from the following repository:
+## Emby danmaku extension
 
-- **dd-danmaku** by chen3861229  
+![1737812914239](images/README/1737812914239.png)
+
+## 版本变化
+
+### 1.0
+
+- 右下角添加弹幕信息展示功能
+- 搜索弹幕 UI 修改，添加图片展示和原标题切换按钮
+  - 以上修改基于 [dd-danmaku](https://github.com/chen3861229/dd-danmaku)
+- 修复手动填充时无法自动填充标题和集数的问题
+
+
+## 引用项目
+
+此项目基于以下代码库：
+
+- **Forked from hiback/emby-danmaku**  
+  Repository: [https://github.com/hiback/emby-danmaku](https://github.com/hiback/emby-danmaku)  
+  License: MIT License
+
+- **原项目 dd-danmaku** by 9channel  
+  Repository: [https://github.com/9channel/dd-danmaku](https://github.com/9channel/dd-danmaku)  
+  License: MIT License
+
+- **使用代码来自 dd-danmaku** by chen3861229  
   Repository: [https://github.com/chen3861229/dd-danmaku](https://github.com/chen3861229/dd-danmaku)  
   License: MIT License
 
-
-## Emby danmaku extension
-![截图](https://raw.githubusercontent.com/hiback/emby-danmaku/res/S01.jpg)
-
-## （相比原版添加了弹幕透明度调整）
-
-## 自用脚本，更新可能不及时，请安装兼容的Emby版本：
-当前测试可兼容版本： Emby Server 4.8.8.0
 
 ## 安装
 
@@ -27,6 +42,7 @@ This project includes code from the following repository:
 ```
 <script src="https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@develop/ede.js" defer></script>
 ```
+
 该方式安装与浏览器插件安装**可同时使用不冲突**
 
 ### 修改客户端
@@ -45,7 +61,7 @@ This project includes code from the following repository:
 - 过滤等级: 过滤弹幕强度,等级越高强度越大,0级无限制*
 - 弹幕信息: 通过通知(以及后台log)显示当前匹配弹幕信息
 
-    **除0级外均带有每3秒6条的垂直方向弹幕密度限制,高于该限制密度的顶部/底部弹幕将会被转为普通弹幕*
+  **除0级外均带有每3秒6条的垂直方向弹幕密度限制,高于该限制密度的顶部/底部弹幕将会被转为普通弹幕*
 
 ## 弹幕
 

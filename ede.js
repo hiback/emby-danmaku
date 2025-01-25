@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件 (基于RyoLee的emby-danmaku和chen3861229的dd-danmaku项目修改)
 // @author       RyoLee - Modified by hiback (Forked and modified by kutongling)
-// @version      2.0.2
+// @version      1.0
 // @copyright    2022, RyoLee (https://github.com/RyoLee), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg

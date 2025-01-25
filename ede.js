@@ -93,7 +93,7 @@
         return;
       }
       console.log('手动匹配弹幕');
-      reloadDanmaku('search');
+      showSearchDialog();
     },
   };
   const translateButtonOpts = {
@@ -128,6 +128,7 @@
         msg += '\n分集名称:' + window.ede.episode_info.episodeTitle;
       }
       sendNotification('当前弹幕匹配', msg);
+      appendvideoOsdDanmakuInfo(getDanmakuComments(window.ede).length);
     },
   };
   const filterButtonOpts = {
@@ -392,20 +393,19 @@
         return JSON.parse(window.localStorage.getItem(_episode_key));
       }
     }
-    if (window.localStorage.getItem(_id_key)) {
-      anime_id = window.localStorage.getItem(_id_key);
-    }
-    if (window.localStorage.getItem(_name_key)) {
-      animeName = window.localStorage.getItem(_name_key);
-    }
     if (!is_auto) {
-      animeName = prompt('确认动画名:', animeName);
+      // 显示搜索对话框
+      window.ede._searchName = animeName;
+      await showSearchDialog();
+      return null;
     }
 
-    let searchUrl = 'https://cors.hiback.workers.dev/https://api.dandanplay.net/api/v2/search/episodes?anime=' + animeName + '&withRelated=true';
+    // 自动搜索逻辑
+    let searchUrl = 'https://cors.hiback.workers.dev/https://api.dandanplay.net/api/v2/search/episodes?anime=' + animeName;
     if (is_auto) {
       searchUrl += '&episode=' + episode;
     }
+
     let animaInfo = await fetch(searchUrl)
       .then((response) => response.json())
       .catch((error) => {
@@ -506,6 +506,10 @@
       comments: _comments,
       engine: 'canvas',
     });
+    
+    // 添加显示弹幕信息
+    appendvideoOsdDanmakuInfo(_comments.length);
+
     window.ede.danmakuSwitch == 1 ? window.ede.danmaku.show() : window.ede.danmaku.hide();
     if (window.ede.ob) {
       window.ede.ob.disconnect();
@@ -529,6 +533,7 @@
       .then((info) => {
         return new Promise((resolve, reject) => {
           if (!info) {
+            appendvideoOsdDanmakuInfo(); // 添加这行显示未匹配状态
             if (type != 'init') {
               reject('播放器未完成加载');
             } else {
@@ -650,6 +655,294 @@
       ep_lists_str = ep_lists_str + '\n' + (i + 1).toString() + ':' + anime_lists[i];
     }
     return ep_lists_str;
+  }
+
+  const searchAnimeTemplateHtml = `
+    <div style="display: flex; flex-direction: column; padding: 1em; background: #1f1f1f; color: #fff;">
+      <div style="display: flex; margin-bottom: 1em; justify-content: space-between;">
+        <div style="display: flex; flex: 1;">
+          <input type="search" is="emby-input" id="danmakuSearchName" class="emby-input" style="background: #333; color: #fff;">
+          <button is="emby-button" id="danmakuSearchBtn" class="paper-icon-button-light" title="搜索" style="color: #fff;">
+            <span class="md-icon">${search_icon}</span>
+          </button>
+          <button is="emby-button" id="danmakuToggleTitle" class="paper-icon-button-light" title="切换原标题" style="color: #fff;">
+            <span class="md-icon">${translate_icon}</span>
+          </button>
+        </div>
+        <button is="emby-button" id="closeSearchDialog" class="paper-icon-button-light" title="关闭" style="color: #fff; margin-left: 1em;">
+          <span class="md-icon">close</span>
+        </button>
+      </div>
+      <div id="danmakuAnimeSelect" style="display: none;">
+        <div style="display: flex;">
+          <div style="width: 75%;">
+            <div style="margin-bottom: 0.5em;">
+              <label style="color: #888;">媒体名:</label>
+              <select is="emby-select" id="animeSelect" class="emby-select" style="background: #333; color: #fff;"></select>
+            </div>
+            <div style="display: flex; align-items: center;">
+              <div style="flex: 1;">
+                <label style="color: #888;">分集名:</label>
+                <select is="emby-select" id="episodeSelect" class="emby-select" style="background: #333; color: #fff;"></select>
+              </div>
+              <button is="emby-button" id="danmakuSwitchEpisode" class="paper-icon-button-light" title="加载弹幕" style="color: #fff; margin-left: 0.5em;">
+                <span class="md-icon">done</span>
+              </button>
+            </div>
+          </div>
+          <img id="animeImg" style="width: 23%; height: 100%; margin-left: 2%;" loading="lazy" decoding="async" class="coveredImage">
+        </div>
+      </div>
+    </div>`;
+
+  async function showSearchDialog() {
+    const dialog = document.createElement('dialog'); 
+    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; height: auto; background: transparent; padding: 0;';
+    dialog.innerHTML = searchAnimeTemplateHtml;
+    document.body.appendChild(dialog);
+
+    // Get elements
+    const searchInput = dialog.querySelector('#danmakuSearchName');
+    const closeBtn = dialog.querySelector('#closeSearchDialog');
+    const searchBtn = dialog.querySelector('#danmakuSearchBtn');
+    const toggleBtn = dialog.querySelector('#danmakuToggleTitle');
+    const selectDiv = dialog.querySelector('#danmakuAnimeSelect');
+    const animeSelect = dialog.querySelector('#animeSelect');
+    const episodeSelect = dialog.querySelector('#episodeSelect');
+    const switchBtn = dialog.querySelector('#danmakuSwitchEpisode');
+    const noResultsMsg = document.createElement('div');
+    noResultsMsg.style.color = '#fff';
+    noResultsMsg.style.marginTop = '1em';
+    selectDiv.appendChild(noResultsMsg);
+
+    // Store animeInfo in dialog element
+    let currentAnimeInfo = null;
+    let searchPromise = null;
+
+    // 自动填充当前播放的标题
+    const item = await getEmbyItemInfo();
+    if (item) {
+      searchInput.value = item.Type === 'Episode' ? item.SeriesName : item.Name;
+      window.ede._searchName = searchInput.value;
+      // 记录当前集数供后续匹配使用
+      window.ede._currentEpisode = item.Type === 'Episode' ? item.IndexNumber - 1 : 0;
+    }
+
+    closeBtn.onclick = () => {
+      if (searchPromise && searchPromise.cancel) {
+        searchPromise.cancel();
+      }
+      dialog.remove();
+    };
+
+    dialog.addEventListener('close', () => {
+      if (searchPromise && searchPromise.cancel) {
+        searchPromise.cancel();
+      }
+      dialog.remove();
+    });
+    
+    // 搜索框回车触发搜索
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        searchBtn.click();
+      }
+    });
+
+    searchBtn.onclick = async () => {
+      const searchName = searchInput.value.trim();
+      if (!searchName) return;
+
+      if (searchPromise && searchPromise.cancel) {
+        searchPromise.cancel();
+      }
+
+      selectDiv.style.display = 'block';
+      
+      try {
+        searchPromise = searchAnime(searchName);
+        currentAnimeInfo = await searchPromise;
+        
+        if (!currentAnimeInfo || currentAnimeInfo.animes.length === 0) {
+          noResultsMsg.textContent = '未找到匹配结果';
+          animeSelect.innerHTML = '';
+          episodeSelect.innerHTML = '';
+          return;
+        }
+
+        noResultsMsg.textContent = '';
+        
+        // 更新选项
+        updateAnimeSelects(currentAnimeInfo, animeSelect, episodeSelect);
+        updateAnimeImg(currentAnimeInfo.animes[0].animeId);
+
+        // 自动定位到对应集数
+        if (window.ede._currentEpisode !== undefined) {
+          episodeSelect.value = window.ede._currentEpisode;
+        }
+        
+        animeSelect.onchange = () => {
+          const selectedAnime = currentAnimeInfo.animes[animeSelect.value];
+          updateEpisodeSelect(selectedAnime);
+          updateAnimeImg(selectedAnime.animeId);
+        };
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log('Search canceled');
+        } else {
+          console.error('Search failed:', err);
+          noResultsMsg.textContent = '搜索失败: ' + err.message;
+        }
+      }
+    };
+
+    toggleBtn.onclick = async () => {
+      const item = await getEmbyItemInfo();
+      if (item) {
+        if (item.OriginalTitle) {
+          searchInput.value = item.OriginalTitle;
+        } else if (item.Type === 'Episode' && item.SeriesName) {
+          const series = await ApiClient.getItem(ApiClient.getCurrentUserId(), item.SeriesId);
+          if (series && series.OriginalTitle) {
+            searchInput.value = series.OriginalTitle;
+          }
+        }
+        searchBtn.click();
+      }
+    };
+
+    switchBtn.onclick = async () => {
+      if (!currentAnimeInfo) return;
+      try {
+        const selectedAnime = currentAnimeInfo.animes[animeSelect.value];
+        const selectedEpisode = selectedAnime.episodes[episodeSelect.value];
+        const episodeInfo = {
+          episodeId: selectedEpisode.episodeId,
+          animeTitle: selectedAnime.animeTitle, 
+          episodeTitle: selectedAnime.type === 'tvseries' ? selectedEpisode.episodeTitle : null,
+        };
+
+        // 保存关联信息到本地存储
+        const item = await getEmbyItemInfo(); 
+        if (item) {
+          const _id = item.Type === 'Episode' ? item.SeasonId : item.Id;
+          const episode = item.Type === 'Episode' ? item.IndexNumber : 'movie';
+          const _id_key = '_anime_id_rel_' + _id;
+          const _episode_key = '_episode_id_rel_' + _id + '_' + episode;
+
+          // 保存动画ID关联
+          window.localStorage.setItem(_id_key, selectedAnime.animeId);
+          // 保存分集信息关联  
+          window.localStorage.setItem(_episode_key, JSON.stringify(episodeInfo));
+        }
+
+        dialog.remove();
+        reloadDanmaku('reload');
+      } catch (err) {
+        console.error('Failed to switch episode:', err);
+        noResultsMsg.textContent = '切换失败: ' + err.message;
+      }
+    };
+
+    searchBtn.click(); // 无论是自动还是手动模式都执行搜索
+    dialog.showModal(); // 显示对话框
+  }
+
+  // 添加可取消的搜索函数
+  async function searchAnime(name) {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    try {
+      const searchUrl = 'https://cors.hiback.workers.dev/https://api.dandanplay.net/api/v2/search/episodes?anime=' + name;
+      const promise = fetch(searchUrl, { signal })
+        .then(response => response.json())
+        .catch(error => {
+          if (error.name === 'AbortError') {
+            throw error;
+          }
+          console.log('查询失败:', error);
+          return null;
+        });
+      
+      // 添加取消功能
+      promise.cancel = () => controller.abort();
+      return promise;
+
+    } catch (err) {
+      console.error('Search failed:', err);
+      throw err;
+    }
+  }
+
+  function updateAnimeSelects(animeInfo, animeSelect, episodeSelect) {
+    animeSelect.innerHTML = '';
+    animeInfo.animes.forEach((anime, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = `${anime.animeTitle} (${anime.typeDescription})`;
+      animeSelect.appendChild(option);
+    });
+    
+    updateEpisodeSelect(animeInfo.animes[0]);
+  }
+
+  function updateEpisodeSelect(anime) {
+    const episodeSelect = document.querySelector('#episodeSelect');
+    episodeSelect.innerHTML = '';
+    if (!anime || !anime.episodes || anime.episodes.length === 0) {
+      return;
+    }
+    anime.episodes.forEach((episode, index) => {
+      const option = document.createElement('option');
+      option.value = index; 
+      option.textContent = episode.episodeTitle || `第${index + 1}话`;
+      episodeSelect.appendChild(option);
+    });
+  }
+
+  function updateAnimeImg(animeId) {
+    const animeImg = document.querySelector('#animeImg');
+    animeImg.src = `https://img.dandanplay.net/anime/${animeId}.jpg`;
+  }
+
+  // 在全局常量区域添加这个样式常量
+  const videoOsdDanmakuInfoStyle = 'margin-left: auto; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; position: absolute; right: 0px; bottom: 0px;';
+
+  // 添加视频右下角弹幕信息函数
+  function appendvideoOsdDanmakuInfo(loadSum) {
+    const episode_info = window.ede.episode_info || {};
+    const { episodeId, animeTitle, episodeTitle } = episode_info;
+    const videoOsdContainer = document.querySelector(`${mediaContainerQueryStr} .videoOsdSecondaryText`);
+    let videoOsdDanmakuTitle = document.getElementById('videoOsdDanmakuTitle');
+    
+    if (!videoOsdDanmakuTitle) {
+      videoOsdDanmakuTitle = document.createElement('h3');
+      videoOsdDanmakuTitle.id = 'videoOsdDanmakuTitle';
+      videoOsdDanmakuTitle.classList.add('videoOsdTitle');
+      videoOsdDanmakuTitle.style = videoOsdDanmakuInfoStyle;
+    }
+
+    let text = '弹幕：';
+    if (episodeId) {
+      text += `${animeTitle} - ${episodeTitle || ''} - ${loadSum || 0}条`;
+    } else {
+      text += '未匹配';
+    }
+    
+    videoOsdDanmakuTitle.innerText = text;
+    if (videoOsdContainer) {
+      videoOsdContainer.append(videoOsdDanmakuTitle);
+    }
+  }
+
+  // 添加获取当前弹幕数量的辅助函数
+  function getDanmakuComments(ede) {
+    if (ede.danmaku && ede.danmaku.comments) {
+      return ede.danmaku.comments;
+    }
+    return [];
   }
 
   while (!window.require) {

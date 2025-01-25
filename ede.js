@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件 (基于RyoLee的emby-danmaku和chen3861229的dd-danmaku项目修改)
 // @author       RyoLee - Modified by hiback (Forked and modified by kutongling)
-// @version      1.0
+// @version      1.0.1
 // @copyright    2022, RyoLee (https://github.com/RyoLee), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -21,9 +21,10 @@
   const danmaku_icons = ['\uE7A2', '\uE0B9'];
   const search_icon = '\uE881';
   const translate_icon = '\uE927';
-  const info_icon = '\uE0E0';
   const filter_icons = ['\uE3E0', '\uE3D0', '\uE3D1', '\uE3D2'];
   const transparency_icons = ['\uEBDC', '\uEBD9', '\uEBE0', '\uEBDD', '\uEBE2', '\uEBD4', '\uEBD2', '\uE1A4'];
+  const info_switch_icons = ['\uE8F5', '\uE8F4']; // 关闭/显示
+  const more_filter_icon = '\uE5D3'; // 更多过滤图标
 
   //通用参数常量
   const menubarOptions = {
@@ -113,24 +114,6 @@
       console.log(document.querySelector('#translateDanmaku').getAttribute('title'));
     },
   };
-  const infoButtonOpts = {
-    title: '弹幕信息',
-    id: 'printDanmakuInfo',
-    innerText: info_icon,
-    onclick: () => {
-      if (!window.ede.episode_info || window.ede.loading) {
-        console.log('正在加载,请稍后再试');
-        return;
-      }
-      console.log('显示当前信息');
-      let msg = '动画名称:' + window.ede.episode_info.animeTitle;
-      if (window.ede.episode_info.episodeTitle) {
-        msg += '\n分集名称:' + window.ede.episode_info.episodeTitle;
-      }
-      sendNotification('当前弹幕匹配', msg);
-      appendvideoOsdDanmakuInfo(getDanmakuComments(window.ede).length);
-    },
-  };
   const filterButtonOpts = {
     title: '过滤等级(下次加载生效)',
     id: 'filteringDanmaku',
@@ -152,6 +135,37 @@
     oninput: function() {
       window.localStorage.setItem('danmakuTransparencyLevel', this.value);
       globalOpacity = this.value / 100;
+    },
+  };
+  const infoSwitchButtonOpts = {
+    title: '弹幕信息显示',
+    id: 'switchDanmakuInfo',
+    innerText: null,
+    onclick: () => {
+      console.log('切换弹幕信息显示');
+      window.ede.showDanmakuInfo = !window.ede.showDanmakuInfo;
+      window.localStorage.setItem('showDanmakuInfo', window.ede.showDanmakuInfo);
+      document.querySelector('#switchDanmakuInfo').children[0].innerText = info_switch_icons[window.ede.showDanmakuInfo ? 1 : 0];
+      const infoElement = document.getElementById('videoOsdDanmakuTitle');
+      if (infoElement) {
+        infoElement.style.display = window.ede.showDanmakuInfo ? 'block' : 'none';
+      }
+    },
+  };
+  const danmakuTypeFilterOpts = {
+    bottom: { id: 'bottom', name: '底部弹幕', },
+    top: { id: 'top', name: '顶部弹幕', },
+    rolling: { id: 'rolling', name: '滚动弹幕', }, // 滚动弹幕选项包含了 ltr 和 rtl
+    onlyWhite: { id: 'onlyWhite', name: '彩色弹幕', },
+    emoji: { id: 'emoji', name: 'emoji', },
+  };
+  const moreFilterButtonOpts = {
+    title: '更多过滤选项',
+    id: 'moreFilteringDanmaku',
+    innerText: more_filter_icon,
+    onclick: () => {
+        console.log('显示更多过滤选项');
+        showFilterDialog();
     },
   };
 
@@ -178,6 +192,11 @@
       this.episode_info = null;
       this.ob = null;
       this.loading = false;
+      this.showDanmakuInfo = true; // 添加新属性
+      if (window.localStorage.getItem('showDanmakuInfo') !== null) {
+        this.showDanmakuInfo = window.localStorage.getItem('showDanmakuInfo') === 'true';
+      }
+      this.originalCount = 0; // 添加原始弹幕数量属性
     }
   }
 
@@ -319,9 +338,11 @@
     // 屏蔽等级
     filterButtonOpts.innerText = filter_icons[parseInt(window.localStorage.getItem('danmakuFilterLevel') ? window.localStorage.getItem('danmakuFilterLevel') : 0)];
     menubar.appendChild(createButton(filterButtonOpts));
+    menubar.appendChild(createButton(moreFilterButtonOpts));
     if (!isMobile) {
-      // 弹幕信息
-      menubar.appendChild(createButton(infoButtonOpts));
+      // 弹幕信息显示开关
+      infoSwitchButtonOpts.innerText = info_switch_icons[window.ede.showDanmakuInfo ? 1 : 0];
+      menubar.appendChild(createButton(infoSwitchButtonOpts));
     }
     console.log('UI初始化完成');
   }
@@ -467,6 +488,22 @@
     if (!comments) {
       return;
     }
+
+    // 保存原始弹幕数量
+    window.ede.originalCount = comments.length;
+    
+    // 等待视频元素就绪
+    const waitForVideo = async () => {
+      const video = document.querySelector(mediaQueryStr);
+      if (!video || !video.readyState) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        return waitForVideo();
+      }
+      return video;
+    };
+
+    await waitForVideo();
+
     if (window.ede.danmaku != null) {
       window.ede.danmaku.clear();
       window.ede.danmaku.destroy();
@@ -533,11 +570,21 @@
       return;
     }
     window.ede.loading = true;
+
+    // 添加视频元素检查
+    const videoElement = document.querySelector(mediaQueryStr);
+    if (!videoElement || !videoElement.readyState) {
+      console.log('视频元素未就绪，等待重试...');
+      window.ede.loading = false;
+      setTimeout(() => reloadDanmaku(type), 500);
+      return;
+    }
+
     getEpisodeInfo(type != 'search')
       .then((info) => {
         return new Promise((resolve, reject) => {
           if (!info) {
-            appendvideoOsdDanmakuInfo(); // 添加这行显示未匹配状态
+            appendvideoOsdDanmakuInfo();
             if (type != 'init') {
               reject('播放器未完成加载');
             } else {
@@ -554,11 +601,20 @@
       })
       .then(
         (episodeId) =>
-          getComments(episodeId).then((comments) =>
-            createDanmaku(comments).then(() => {
-              console.log('弹幕就位');
-            }),
-          ),
+          getComments(episodeId).then((comments) => {
+            // 确保视频容器已准备就绪
+            return new Promise((resolve) => {
+              const checkContainer = () => {
+                const container = document.querySelector(mediaContainerQueryStr);
+                if (container && !container.classList.contains('hide')) {
+                  resolve(comments);
+                } else {
+                  setTimeout(checkContainer, 200);
+                }
+              };
+              checkContainer();
+            }).then(comments => createDanmaku(comments));
+          }),
         (msg) => {
           if (msg) {
             console.log(msg);
@@ -567,13 +623,61 @@
       )
       .then(() => {
         window.ede.loading = false;
-        if (document.getElementById('danmakuCtr').style.opacity != 1) {
+        if (document.getElementById('danmakuCtr')) {
           document.getElementById('danmakuCtr').style.opacity = 1;
         }
+      })
+      .catch(error => {
+        console.error('弹幕加载失败:', error);
+        window.ede.loading = false;
       });
   }
 
   function danmakuFilter(comments) {
+    let _comments = [...comments];
+    // 类型过滤
+    const typeFilters = window.localStorage.getItem('danmakuTypeFilter') ? 
+        JSON.parse(window.localStorage.getItem('danmakuTypeFilter')) : [];
+    
+    _comments = danmakuTypeFilter(_comments, typeFilters);
+    
+    // 密度过滤
+    _comments = danmakuDensityLevelFilter(_comments);
+    
+    return _comments;
+  }
+
+  function danmakuTypeFilter(comments, filters) {
+    if (!filters || filters.length === 0) return comments;
+    
+    // 彩色过滤,只留下默认的白色
+    if (filters.includes(danmakuTypeFilterOpts.onlyWhite.id)) {
+        comments = comments.filter(c => '#ffffff' === c.style.color.toLowerCase().slice(0, 7));
+        filters = filters.filter(f => f !== danmakuTypeFilterOpts.onlyWhite.id);
+    }
+
+    // 过滤滚动弹幕(包含从左至右和从右至左)
+    if (filters.includes(danmakuTypeFilterOpts.rolling.id)) {
+        comments = comments.filter(c => c.mode !== 'ltr' && c.mode !== 'rtl');
+        filters = filters.filter(f => f !== danmakuTypeFilterOpts.rolling.id);
+    }
+
+    // 按 emoji 过滤
+    if (filters.includes(danmakuTypeFilterOpts.emoji.id)) {
+        const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]/gu;
+        comments = comments.filter(c => !emojiRegex.test(c.text));
+        filters = filters.filter(f => f !== danmakuTypeFilterOpts.emoji.id);
+    }
+
+    // 过滤特定模式的弹幕
+    if (filters.length > 0) {
+        comments = comments.filter(c => !filters.includes(c.mode));
+    }
+
+    return comments;
+  }
+
+  function danmakuDensityLevelFilter(comments) {
     let level = parseInt(window.localStorage.getItem('danmakuFilterLevel') ? window.localStorage.getItem('danmakuFilterLevel') : 0);
     if (level == 0) {
       return comments;
@@ -912,7 +1016,7 @@
   // 在全局常量区域添加这个样式常量
   const videoOsdDanmakuInfoStyle = 'margin-left: auto; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; position: absolute; right: 0px; bottom: 0px;';
 
-  // 添加视频右下角弹幕信息函数
+  // 修改弹幕信息显示函数
   function appendvideoOsdDanmakuInfo(loadSum) {
     const episode_info = window.ede.episode_info || {};
     const { episodeId, animeTitle, episodeTitle } = episode_info;
@@ -924,18 +1028,19 @@
       videoOsdDanmakuTitle.id = 'videoOsdDanmakuTitle';
       videoOsdDanmakuTitle.classList.add('videoOsdTitle');
       videoOsdDanmakuTitle.style = videoOsdDanmakuInfoStyle;
+      videoOsdDanmakuTitle.style.display = window.ede.showDanmakuInfo ? 'block' : 'none';
     }
 
     let text = '弹幕：';
     if (episodeId) {
-      text += `${animeTitle} - ${episodeTitle || ''} - ${loadSum || 0}条`;
+        text += `${animeTitle} - ${episodeTitle || ''} - ${loadSum}/${window.ede.originalCount}条`;
     } else {
-      text += '未匹配';
+        text += '未匹配';
     }
     
     videoOsdDanmakuTitle.innerText = text;
     if (videoOsdContainer) {
-      videoOsdContainer.append(videoOsdDanmakuTitle);
+        videoOsdContainer.append(videoOsdDanmakuTitle);
     }
   }
 
@@ -947,18 +1052,88 @@
     return [];
   }
 
+  async function showFilterDialog() {
+    const filterDialogHtml = `
+        <div style="display: flex; flex-direction: column; padding: 1em; background: #1f1f1f; color: #fff;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1em;">
+                <h3 style="margin: 0;">弹幕过滤设置</h3>
+                <button is="emby-button" id="closeFilterDialog" class="paper-icon-button-light" title="关闭">
+                    <span class="md-icon">close</span>
+                </button>
+            </div>
+            <div id="filterTypeContainer" style="display: flex; flex-wrap: wrap;"></div>
+        </div>
+    `;
+
+    const dialog = document.createElement('dialog');
+    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; background: transparent; padding: 0;';
+    dialog.innerHTML = filterDialogHtml;
+    document.body.appendChild(dialog);
+
+    // 获取已保存的过滤类型
+    const selectedTypes = window.localStorage.getItem('danmakuTypeFilter') ? 
+        JSON.parse(window.localStorage.getItem('danmakuTypeFilter')) : [];
+
+    // 添加过滤选项
+    const container = dialog.querySelector('#filterTypeContainer');
+    Object.values(danmakuTypeFilterOpts).forEach(opt => {
+        const checkbox = document.createElement('label');
+        checkbox.style = 'margin: 0.5em; display: flex; align-items: center;';
+        checkbox.innerHTML = `
+            <input type="checkbox" is="emby-checkbox" 
+                ${selectedTypes.includes(opt.id) ? 'checked' : ''}
+                value="${opt.id}">
+            <span>${opt.name}</span>
+        `;
+        
+        checkbox.querySelector('input').addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            const value = e.target.value;
+            let types = window.localStorage.getItem('danmakuTypeFilter') ? 
+                JSON.parse(window.localStorage.getItem('danmakuTypeFilter')) : [];
+            
+            if (checked && !types.includes(value)) {
+                types.push(value);
+            } else if (!checked) {
+                types = types.filter(t => t !== value);
+            }
+            
+            window.localStorage.setItem('danmakuTypeFilter', JSON.stringify(types));
+            reloadDanmaku('reload');
+        });
+        
+        container.appendChild(checkbox);
+    });
+
+    dialog.querySelector('#closeFilterDialog').onclick = () => dialog.remove();
+    dialog.showModal();
+  }
+
   while (!window.require) {
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
   if (!window.ede) {
     window.ede = new EDE();
+    
+    // 添加视频就绪检查函数
+    const waitForVideoReady = async () => {
+      const video = document.querySelector(mediaQueryStr);
+      return video && video.readyState;
+    };
+
     setInterval(() => {
       initUI();
     }, check_interval);
-    while (!(await getEmbyItemInfo())) {
+
+    // 等待 Emby 项和视频就绪
+    while (!(await getEmbyItemInfo()) || !(await waitForVideoReady())) {
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
+
+    // 确保视频就绪后再初始化弹幕
+    await new Promise(resolve => setTimeout(resolve, 500)); // 额外等待以确保完全就绪
     reloadDanmaku('init');
+    
     setInterval(() => {
       initListener();
     }, check_interval);

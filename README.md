@@ -9,7 +9,7 @@ This project includes code from the following repository:
 
 
 ## Emby danmaku extension
-![截图](https://raw.githubusercontent.com/hiback/emby-danmaku/res/S01.jpg)
+![演示图](https://github.com/kutongling/emby-danmaku/blob/develop/%E6%BC%94%E7%A4%BA.png)
 
 ## （相比原版添加了弹幕透明度调整）
 

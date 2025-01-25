@@ -1,4 +1,12 @@
 # emby-danmaku
+## Third-Party Libraries and Code
+
+This project includes code from the following repository:
+
+- **dd-danmaku** by chen3861229  
+  Repository: [https://github.com/chen3861229/dd-danmaku](https://github.com/chen3861229/dd-danmaku)  
+  License: MIT License
+
 
 ## Emby danmaku extension
 ![截图](https://raw.githubusercontent.com/hiback/emby-danmaku/res/S01.jpg)

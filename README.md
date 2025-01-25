@@ -2,7 +2,7 @@
 
 ## Emby danmaku extension
 
-![1737812914239](images/README/1737812914239.png)
+![演示](https://raw.githubusercontent.com/kutongling/emby-danmaku/develop/%E6%BC%94%E7%A4%BA.png)
 
 ## 版本变化
 
